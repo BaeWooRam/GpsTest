@@ -12,6 +12,10 @@ import com.example.gpstest.gps.listener.GpsTaskListener
 import com.google.android.gms.location.*
 import java.lang.Exception
 
+/**
+ * Gps 관련 Provider
+ * 참조 : https://github.com/android/location-samples/tree/432d3b72b8c058f220416958b444274ddd186abd/LocationUpdatesForegroundService
+ */
 class GpsProvider(private val context: Context) {
     private val fusedLocationClient: FusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(context)
@@ -80,21 +84,41 @@ class GpsProvider(private val context: Context) {
             .checkLocationSettings(locationSettingsRequest)
             .addOnCompleteListener {
                 if (it.isSuccessful)
-                fusedLocationClient.requestLocationUpdates(locationRequest, object :LocationCallback(){
-                    override fun onLocationResult(p0: LocationResult?) {
-                        super.onLocationResult(p0)
-                    }
 
-                    override fun onLocationAvailability(p0: LocationAvailability?) {
-                        super.onLocationAvailability(p0)
-                    }
-                }, Looper.getMainLooper())
                 else{
                     taskListener.onFailure(GpsLocationSettingRequestException())
                 }
             }
     }
 
+
+    /**
+     * 위치 업데이트 시작
+     */
+    fun startLocationUpdates(locationRequest: LocationRequest){
+        val check = checkSelfPermission()
+
+        if (!check) {
+            return
+        }
+
+        fusedLocationClient.requestLocationUpdates(locationRequest, object :LocationCallback(){
+            override fun onLocationResult(p0: LocationResult?) {
+                super.onLocationResult(p0)
+            }
+
+            override fun onLocationAvailability(p0: LocationAvailability?) {
+                super.onLocationAvailability(p0)
+            }
+        }, Looper.getMainLooper())
+    }
+
+    /**
+     * 위치 업데이트 중지
+     */
+    fun stopLocationUpdates(locationCallback: LocationCallback){
+        fusedLocationClient.removeLocationUpdates(locationCallback)
+    }
 
     private fun checkSelfPermission(): Boolean {
         return (ActivityCompat.checkSelfPermission(
